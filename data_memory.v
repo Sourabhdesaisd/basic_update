@@ -2,23 +2,21 @@ module data_memory (
     input          clk,
     input          mem_read,
     input          mem_write,
-    input   [31:0] addr,          // byte address
+    input   [9:0] addr,          // byte address
     input   [31:0] write_data,    // from store datapath
     input   [3:0]  byte_enable,   // from store datapath
     output  [31:0] mem_data_out   // to load datapath
 );
-        parameter MEM_BYTES = 4294967296;
-    parameter ADDR_BITS = 32;   // log2(1024)
+        parameter MEM_BYTES = 1024;
+    parameter ADDR_BITS = 10;   // log2(1024)
 
     reg [7:0] mem [ 0 : MEM_BYTES-1 ];
 
- //   wire [ADDR_BITS-1:0] mem_addr = addr[ADDR_BITS-1:0];
- 
- wire [ADDR_BITS-1:0] mem_addr = {addr[ADDR_BITS-1:2], 2'b00};
+    wire [ADDR_BITS-1:0] mem_addr = addr[ADDR_BITS-1:0];
 
     integer i;
     initial begin
-        for(i=0;i<4294967296;i=i+1)
+        for(i=0;i<1024;i=i+1)
             mem[i] = 8'b0; // avoid X in simulation
     end
 
@@ -45,10 +43,18 @@ module data_memory (
             mem_data_out = 32'b0;
         end 
     end */
-assign mem_data_out = mem_read ? { mem[mem_addr + {{(ADDR_BITS-2){1'b0}}, 2'b11}],
-             			   mem[mem_addr + {{(ADDR_BITS-2){1'b0}}, 2'b10}],
-             			   mem[mem_addr + {{(ADDR_BITS-1){1'b0}}, 1'b1}],
+//assign mem_data_out = mem_read ? { mem[mem_addr + {{(ADDR_BITS-2){1'b0}}, 2'b11}],
+  //           			   mem[mem_addr + {{(ADDR_BITS-2){1'b0}}, 2'b10}],
+    //         			   mem[mem_addr + {{(ADDR_BITS-1){1'b0}}, 1'b1}],
+      //     		           mem[mem_addr]  } : 32'b0 ;
+
+      
+      
+  assign mem_data_out = mem_read ? { mem[mem_addr + 3],
+             			   mem[mem_addr + 2],
+             			   mem[mem_addr + 1],
            		           mem[mem_addr]  } : 32'b0 ;
+    
 endmodule
 
 

@@ -14,6 +14,15 @@ module mem_wb_pipe (
 
     input  [31:0] instr_mem,
 
+    input        mem_write_mem_pipe_in,
+    input [31:0] mem_addr_pipe_in,
+    input [31:0] mem_write_data_pipe_in,
+
+    output reg        mem_s_write_mem_pipe_out,
+    output reg [31:0] mem_s_addr_pipe_out,
+    output reg [31:0] mem_s_write_data_pipe_out,
+
+
     
     output reg [31:0] instr_wb,
 
@@ -66,6 +75,11 @@ module mem_wb_pipe (
             update_pc_out    <= ZERO32;
             jump_addr_out    <= ZERO32;
             update_btb_out   <= 1'b0;*/
+
+            mem_s_write_mem_pipe_out <= 1'b0;
+            mem_s_addr_pipe_out  <= ZERO32;
+            mem_s_write_data_pipe_out <= ZERO32;
+
         end
         
         else  begin
@@ -83,6 +97,12 @@ module mem_wb_pipe (
             update_pc_out    <= update_pc_in;
             jump_addr_out    <= jump_addr_in;
             update_btb_out   <= update_btb_in;*/
+
+             mem_s_write_mem_pipe_out <= mem_write_mem_pipe_in ;
+             mem_s_addr_pipe_out <= mem_addr_pipe_in ;
+              mem_s_write_data_pipe_out <= mem_write_data_pipe_in ;
+
+ 
         end
     end
 

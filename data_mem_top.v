@@ -4,9 +4,15 @@ module data_mem_top (
     input         mem_write,
     input  [2:0]  load_type,   // 000 LB, 001 LH, 010 LW, 011 LBU, 100 LHU
     input  [1:0]  store_type,  // 00 SB, 01 SH, 10 SW
-    input  [31:0] addr,        // ALU result (byte address)
+    input  [9:0] addr,        // ALU result (byte address)
     input  [31:0] rs2_data,    // data to store (from register file)
-    output [31:0] read_data    // load result to register file
+    output [31:0] read_data,    // load result to register file
+    output        mem_write_mem,
+    output [31:0] mem_addr,
+    output [31:0] mem_write_data
+
+
+
 );
     wire [31:0] mem_write_data;
     wire [3:0]  byte_enable;
@@ -31,6 +37,11 @@ module data_mem_top (
         .byte_enable(byte_enable),
         .mem_data_out(mem_data_out)
     );
+
+
+    assign mem_write_mem = mem_write;
+    assign mem_addr = addr;
+  //  assign mem_write_data = write_data ;
 
     // LOAD DATAPATH
     load_datapath u_load (
