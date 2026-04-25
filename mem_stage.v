@@ -73,7 +73,7 @@ module mem_stage (
 
     input         clk,
 
-    input  [9:0] alu_result_mem,       // full 32-bit address
+    input  [31:0] alu_result_mem,       // full 32-bit address
 
     input  [31:0] rs2_data_mem,         // store data
 
@@ -85,11 +85,7 @@ module mem_stage (
 
     input         memtoreg_mem,         // used as mem_read
 
-    output [31:0] load_wb_data   ,       // ONLY output: load data for WB
-
-    output       mem_s_write_mem,
-    output [31:0] mem_s_addr,
-    output [31:0] mem_s_write_data
+    output [31:0] load_wb_data          // ONLY output: load data for WB
 
 );
 
@@ -109,13 +105,8 @@ module mem_stage (
 
         .rs2_data(rs2_data_mem),
 
-        .read_data(load_wb_data),
+        .read_data(load_wb_data)
 
-        .mem_write_mem(mem_s_write_mem),
-    
-        .mem_addr(mem_s_addr),
-
-        .mem_write_data(mem_s_write_data)
     );
 
 endmodule

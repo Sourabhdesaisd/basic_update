@@ -1,109 +1,70 @@
 module mem_wb_pipe (
-    input          clk,
-    input          rst,
- //   input          en,        // enable (1 = advance, 0 = hold/stall)
- //   input          flush,     // bubble insertion (1 = insert NOP/bubble)
+    input clk,
+    input rst,
 
-    // Input from MEM stage (to be registered)
-    input   [31:0] alu_result_in,
-    input   [31:0] load_data_in,
-    input   [4:0]  rd_in,
-    input          wb_reg_file_in,
-    input          memtoreg_in,
-    input  [31:0] pc_mem,
+    // From MEM stage
+    input [31:0] pc_mem,
+    input [31:0] instr_mem,
 
-    input  [31:0] instr_mem,
+    input [31:0] alu_result_in,
+    input [31:0] load_data_in,
+    input [4:0]  rd_in,
+    input        wb_reg_file_in,
+    input        memtoreg_in,
 
-    input        mem_write_mem_pipe_in,
-    input [31:0] mem_addr_pipe_in,
-    input [31:0] mem_write_data_pipe_in,
+    // ? STORE signals from MEM
+    input        mem_write_mem,
+    input [31:0] rs2_data_mem,
+    input [1:0]  mem_store_type_mem,
 
-    output reg        mem_s_write_mem_pipe_out,
-    output reg [31:0] mem_s_addr_pipe_out,
-    output reg [31:0] mem_s_write_data_pipe_out,
-
-
-    
+    // Outputs to WB
+    output reg [31:0] pc_wb,
     output reg [31:0] instr_wb,
 
-    output reg [31:0] pc_wb,
+    output reg [31:0] alu_result_out,
+    output reg [31:0] load_data_out,
+    output reg [4:0]  rd_wb,
+    output reg        wb_reg_file_out,
+    output reg        memtoreg_out,
 
-   /* // Optional: pass-through branch info for observation (not for redirect)
-    input         modify_pc_in,
-    input  [31:0] update_pc_in,
-    input  [31:0] jump_addr_in,
-    input         update_btb_in,*/
-
-    // Outputs to WB stage
-    output reg  [31:0] alu_result_out,
-    output reg  [31:0] load_data_out,
-    output reg  [4:0]  rd_wb,
-    output reg         wb_reg_file_out,
-    output reg         memtoreg_out
-
-    // Forwarding / debug: data that forwarding unit should use from MEM/WB
-   // output wire [31:0] data_forward_wb // typically selected as WB writeback data (mem or ALU)
-
-   /* // Optional branch pass-through (for logging / performance counters)
-    output reg         modify_pc_out,
-    output reg [31:0]  update_pc_out,
-    output reg [31:0]  jump_addr_out,
-    output reg         update_btb_out*/
+    // ? STORE signals to TB
+    output reg        mem_write_wb,
+    output reg [31:0] store_data_wb,
+    output reg [31:0] store_addr_wb,
+    output reg [1:0]  mem_store_type_wb
 );
 
-    // Internal: selected WB data (not registered here — outputs already register values)
-    // Provide the forwarding value as the data that will be written back to the register file.
-    // Forwarding unit expects the most-recent data available in WB stage:
-    // If memtoreg_out==1 -> load data else -> alu result.
-    //
+always @(posedge clk or posedge rst) begin
+    if (rst) begin
+        pc_wb <= 0;
+        instr_wb <= 0;
+        alu_result_out <= 0;
+        load_data_out <= 0;
+        rd_wb <= 0;
+        wb_reg_file_out <= 0;
+        memtoreg_out <= 0;
 
-//    assign data_forward_wb = (memtoreg_out) ? load_data_out : alu_result_out;
-
-    // Safe NOP defaults
-    parameter [31:0] ZERO32 = 32'h00000000;
-    parameter [4:0]  ZERO5  = 5'd0;
-
-    always @(posedge clk or posedge rst) begin
-        if (rst) begin
-            // reset outputs to safe defaults
-            alu_result_out   <= ZERO32;
-            load_data_out    <= ZERO32;
-            rd_wb           <= ZERO5;
-            wb_reg_file_out  <= 1'b0;
-            memtoreg_out     <= 1'b0;
-         /*   modify_pc_out    <= 1'b0;
-            update_pc_out    <= ZERO32;
-            jump_addr_out    <= ZERO32;
-            update_btb_out   <= 1'b0;*/
-
-            mem_s_write_mem_pipe_out <= 1'b0;
-            mem_s_addr_pipe_out  <= ZERO32;
-            mem_s_write_data_pipe_out <= ZERO32;
-
-        end
-        
-        else  begin
-            // Normal capture from MEM stage
-            pc_wb <= pc_mem;
-            alu_result_out   <= alu_result_in;
-            load_data_out    <= load_data_in;
-            rd_wb           <= rd_in;
-            wb_reg_file_out  <= wb_reg_file_in;
-            memtoreg_out     <= memtoreg_in;
-
-            instr_wb <= instr_mem;
-         /*   // Branch info forwarded for visibility only
-            modify_pc_out    <= modify_pc_in;
-            update_pc_out    <= update_pc_in;
-            jump_addr_out    <= jump_addr_in;
-            update_btb_out   <= update_btb_in;*/
-
-             mem_s_write_mem_pipe_out <= mem_write_mem_pipe_in ;
-             mem_s_addr_pipe_out <= mem_addr_pipe_in ;
-              mem_s_write_data_pipe_out <= mem_write_data_pipe_in ;
-
- 
-        end
+        mem_write_wb <= 0;
+        store_data_wb <= 0;
+        store_addr_wb <= 0;
+        mem_store_type_wb <= 0;
     end
+    else begin
+        pc_wb <= pc_mem;
+        instr_wb <= instr_mem;
+
+        alu_result_out <= alu_result_in;
+        load_data_out <= load_data_in;
+        rd_wb <= rd_in;
+        wb_reg_file_out <= wb_reg_file_in;
+        memtoreg_out <= memtoreg_in;
+
+        // ? STORE pipeline
+        mem_write_wb <= mem_write_mem;
+        store_data_wb <= rs2_data_mem;
+        store_addr_wb <= alu_result_in;
+        mem_store_type_wb <= mem_store_type_mem;
+    end
+end
 
 endmodule

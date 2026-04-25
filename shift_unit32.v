@@ -87,13 +87,14 @@ module shift_unit32 (
             // SRA / SRAI (lint-safe arithmetic shift)
             4'b0111: begin
                 if (shamt != 5'd0)
-                  result_shift = (rs1 >> shamt) | ({32{rs1[31]}} << (6'd32 - {1'b0, shamt}));
-              //  result_shift = $signed(rs1) >>> shamt;
-              else
+                    result_shift = (rs1 >> shamt) |
+                                   ({32{rs1[31]}} <<
+                                    (6'd32 - {1'b0, shamt}));
+                else
                     result_shift = rs1;
             end
 	default:
-            result_shift = 32'h000000000;
+            result_shift = 32'hxxxxxxxx;
         endcase
     end
 endmodule

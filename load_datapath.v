@@ -28,13 +28,13 @@ module load_datapath (
     // select halfword by addr[1]
   //  wire [15:0] selected_half = (addr[1] == 1'b0) ? half0 : half1;
 
-    always @(load_type or mem_data_in) begin
+    always @(*) begin
         case (load_type)
             3'b000: begin // LB - sign-extend byte
                 read_data = {{24{mem_data_in[7]}},mem_data_in[7:0]};
             end
             3'b011: begin // LBU - zero-extend byte
-                read_data = {24'b0, mem_data_in[7:0]};
+                read_data = {24'b0,{ mem_data_in[7:0]}};
             end
             3'b001: begin // LH - sign-extend halfword
                 read_data = {{16{mem_data_in[15]}}, mem_data_in[15:0]};

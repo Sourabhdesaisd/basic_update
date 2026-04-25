@@ -42,7 +42,7 @@ module store_datapath (
     output reg  [3:0]  byte_enable
 );
 
-    always @(store_type or write_data or addr) begin  		// lint ---> changes
+    always @(*) begin  		// lint ---> changes
         mem_write_data = 32'b0;
         byte_enable    = 4'b0000;
 

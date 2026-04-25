@@ -14,9 +14,10 @@ module rv32i_core (
     output s_memtoreg_out,
     output [31:0] instr_wb_out,
     output [31:0]instr,
-    output top_mem_write ,
-    output [31:0] top_mem_addr ,      
-    output [31:0] top_mem_write_data
+    output mem_write_wb_out,
+output [31:0] store_data_wb_out,
+output [31:0] store_addr_wb_out,
+output [1:0]  mem_store_type_wb_out
 
     );
     // -------------------------
@@ -159,6 +160,13 @@ module rv32i_core (
     wire [31:0] wb_write_data;
     wire [4:0] wb_write_addr;
     wire wb_write_en;
+
+
+    // ?? ADD BELOW EXISTING WB WIRES
+wire        mem_write_wb;
+wire [31:0] store_data_wb;
+wire [31:0] store_addr_wb;
+wire [1:0]  mem_store_type_wb;
 
     // =====================================================
     // 1) IF stage
@@ -445,57 +453,52 @@ wire [31:0] alu_op2_ex;
 mem_stage u_mem_stage (
     .clk(clk),
     //.alu_result_mem(alu_result_mem[11:2]),
-    .alu_result_mem(alu_result_mem[9:0]),
+    .alu_result_mem(alu_result_mem),
     .rs2_data_mem(rs2_data_mem),
     .mem_write_mem(mem_write_mem),
     .mem_load_type_mem(mem_load_type_mem),
     .mem_store_type_mem(mem_store_type_mem),
     .memtoreg_mem(memtoreg_mem),        // used as mem_read
-    .load_wb_data(load_wb_data)  ,       // direct to mem_wb_pipe below
-
-    .mem_s_write_mem(mem_s_write_mem),
-    .mem_s_addr (mem_s_addr),
-    .mem_s_write_data (mem_s_write_data)
-
-
- );
-
-   //     wire  mem_s_write_mem ;
-  //wire [31:0] mem_s_addr ;
-
-  //wire [31:0] mem_s_write_data;
-
+    .load_wb_data(load_wb_data)         // direct to mem_wb_pipe below
+);
 
 // MEM/WB pipe — bypass ALU result, rd, wb_reg_file, memtoreg directly from MEM registers
+//
+
 mem_wb_pipe u_mem_wb (
     .clk(clk),
-    .pc_mem(pc_mem),
-    .pc_wb(pc_wb),
     .rst(rst),
-    .alu_result_in(alu_result_mem),     // bypassed direct (non-load ALU result)
-    .load_data_in(load_wb_data),        // from slim mem_stage
-    .rd_in(rd_mem),                     // bypassed direct
-    .wb_reg_file_in(wb_reg_file_mem),   // bypassed direct
-    .memtoreg_in(memtoreg_mem),         // bypassed direct
+
+    .pc_mem(pc_mem),
+    .instr_mem(instr_mem),
+
+    .alu_result_in(alu_result_mem),
+    .load_data_in(load_wb_data),
+    .rd_in(rd_mem),
+    .wb_reg_file_in(wb_reg_file_mem),
+    .memtoreg_in(memtoreg_mem),
+
+    // STORE signals
+    .mem_write_mem(mem_write_mem),
+    .rs2_data_mem(rs2_data_mem),
+    .mem_store_type_mem(mem_store_type_mem),
+
+    // Outputs
+    .pc_wb(pc_wb),
+    .instr_wb(instr_wb),
     .alu_result_out(alu_result_wb),
     .load_data_out(load_data_wb),
     .rd_wb(rd_wb),
-    .instr_mem(instr_mem),
-    .instr_wb(instr_wb),
     .wb_reg_file_out(wb_reg_file_wb),
     .memtoreg_out(memtoreg_wb),
 
-
-     .mem_write_mem_pipe_in(mem_s_write_mem),
-     .mem_addr_pipe_in(mem_s_addr),
-
-     .mem_write_data_pipe_in(mem_s_write_data),
-
-     .mem_s_write_mem_pipe_out(mem_s_write_mem_pipe_out),
-     .mem_s_addr_pipe_out( mem_s_addr_pipe_out),
-     .mem_s_write_data_pipe_out( mem_s_write_data_pipe_out)
-
+    // STORE outputs
+    .mem_write_wb(mem_write_wb),
+    .store_data_wb(store_data_wb),
+    .store_addr_wb(store_addr_wb),
+    .mem_store_type_wb(mem_store_type_wb)
 );
+
  //   assign data_forward_wb =  alu_result_wb;
    
   //  assign data_forward_wb = (memtoreg_wb) ? load_data_wb : alu_result_wb;
@@ -525,20 +528,10 @@ mem_wb_pipe u_mem_wb (
     assign s_memtoreg_out    = memtoreg_wb;
 
 
-
-
-//wire mem_s_write_mem_pipe_out;
-//wire [31:0] mem_s_addr_pipe_out;
-//wire [31:0] mem_s_write_data_pipe_out ;
-
-assign top_mem_write     = mem_s_write_mem_pipe_out ;
-assign top_mem_addr       = mem_s_addr_pipe_out ;
-assign top_mem_write_data = mem_s_write_data_pipe_out ;
-
-
-
-
-
+    assign mem_write_wb_out      = mem_write_wb;
+assign store_data_wb_out     = store_data_wb;
+assign store_addr_wb_out     = store_addr_wb;
+assign mem_store_type_wb_out = mem_store_type_wb;
 
 
 endmodule

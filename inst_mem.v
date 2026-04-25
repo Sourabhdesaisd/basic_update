@@ -20,7 +20,8 @@ module inst_mem (
 
     $display("Loading instruction memory from: %s", instr_file);
 
-    $readmemh(instr_file, mem);
+    $readmemh("/home/sgeuser8/Desktop/SD/spike_basic51/VERIFICATION/firmware/programs/addition/addition.hex", mem);
+
     end 
  
 
